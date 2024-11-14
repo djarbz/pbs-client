@@ -3,7 +3,6 @@ ARG RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.
 ARG RUNITOR_ARCH=amd64
 
 FROM debian:$DEBIAN_VERSION-slim
-ENV DEBIAN_VERSION=$DEBIAN_VERSION
 LABEL authors="DJArbz"
 
 #==================================================
@@ -57,12 +56,13 @@ RUN apt-get update -yqq && \
 #==================================================
 # Add Repository
 #==================================================
-RUN echo "Debian Version: ${DEBIAN_VERSION}" && \
+ENV DEBIAN_VERSION=$DEBIAN_VERSION
+RUN /bin/sh -c '\
     curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
     gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
     echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] \
     http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main" | \
-    tee /etc/apt/sources.list.d/proxmox-backup-client.list
+    tee /etc/apt/sources.list.d/proxmox-backup-client.list'
 
 #==================================================
 # Install Proxmox Backup Client
@@ -80,8 +80,9 @@ ENV PBC_BACKUP_ROOT=/backup
 # Install Runitor for Healthchecks.io
 #==================================================
 ENV RUNITOR_VERSION=$RUNITOR_VERSION
-RUN curl -fsSL https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-${RUNITOR_ARCH} -o /usr/local/bin/runitor && \
-    chmod +x /usr/local/bin/runitor
+RUN /bin/sh -c 'curl -fsSL "https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-${RUNITOR_ARCH}" \
+    -o /usr/local/bin/runitor && \
+    chmod +x /usr/local/bin/runitor'
 ENV PBC_HEALTHCHECKS_API_RETRIES=5
 ENV PBC_HEALTHCHECKS_API_TIMEOUT=10s
 
