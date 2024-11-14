@@ -1,9 +1,16 @@
 ARG DEBIAN_VERSION=bookworm
-ARG RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
-ARG RUNITOR_ARCH=amd64
-
 FROM debian:$DEBIAN_VERSION-slim
 LABEL authors="DJArbz"
+
+#==================================================
+# Redefine ARGs (FROM clears them)
+#==================================================
+ARG DEBIAN_VERSION=bookworm
+ENV DEBIAN_VERSION=$DEBIAN_VERSION
+ARG RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
+ENV RUNITOR_VERSION=$RUNITOR_VERSION
+ARG RUNITOR_ARCH=amd64
+ENV RUNITOR_ARCH=RUNITOR_ARCH
 
 #==================================================
 # PROXMOX Environment Variables
@@ -56,13 +63,11 @@ RUN apt-get update -yqq && \
 #==================================================
 # Add Repository
 #==================================================
-ENV DEBIAN_VERSION=$DEBIAN_VERSION
-RUN /bin/sh -c '\
-    curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
+RUN curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
     gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
     echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] \
     http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main" | \
-    tee /etc/apt/sources.list.d/proxmox-backup-client.list'
+    tee /etc/apt/sources.list.d/proxmox-backup-client.list
 
 #==================================================
 # Install Proxmox Backup Client
@@ -79,10 +84,9 @@ ENV PBC_BACKUP_ROOT=/backup
 #==================================================
 # Install Runitor for Healthchecks.io
 #==================================================
-ENV RUNITOR_VERSION=$RUNITOR_VERSION
-RUN /bin/sh -c 'curl -fsSL "https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-${RUNITOR_ARCH}" \
+RUN curl -fsSL "https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-${RUNITOR_ARCH}" \
     -o /usr/local/bin/runitor && \
-    chmod +x /usr/local/bin/runitor'
+    chmod +x /usr/local/bin/runitor
 ENV PBC_HEALTHCHECKS_API_RETRIES=5
 ENV PBC_HEALTHCHECKS_API_TIMEOUT=10s
 
