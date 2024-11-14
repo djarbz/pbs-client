@@ -1,15 +1,10 @@
 ARG DEBIAN_VERSION=bookworm
+ENV DEBIAN_VERSION=$DEBIAN_VERSION
 ARG RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
 ARG RUNITOR_ARCH=amd64
 
 FROM debian:$DEBIAN_VERSION-slim
 LABEL authors="DJArbz"
-
-#==================================================
-# SYSTEM Environment Variables
-#==================================================
-ENV DEBIAN_VERSION=$DEBIAN_VERSION
-ENV PBC_LAST_RUN_FILE=/run/pbs-client.run
 
 #==================================================
 # PROXMOX Environment Variables
@@ -64,7 +59,7 @@ RUN apt-get update -yqq && \
 #==================================================
 RUN curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
     gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
-    add-apt-repository "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main"
+    echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main" | tee /etc/apt/sources.list.d/proxmox-backup-client.list
 
 #==================================================
 # Install Proxmox Backup Client
@@ -97,5 +92,6 @@ RUN chmod a+x /entrypoint.sh /scripts/*
 #==================================================
 # Start!
 #==================================================
+ENV PBC_LAST_RUN_FILE=/run/pbs-client.run
 STOPSIGNAL SIGINT
 ENTRYPOINT ["/entrypoint.sh"]
