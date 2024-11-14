@@ -80,7 +80,7 @@ ENV PBC_BACKUP_ROOT=/backup
 #==================================================
 # Install Runitor for Healthchecks.io
 #==================================================
-COPY --chmod 777 runitor /usr/local/bin/
+COPY --chmod=777 runitor /usr/local/bin/
 ENV PBC_HEALTHCHECKS_API_RETRIES=5
 ENV PBC_HEALTHCHECKS_API_TIMEOUT=10s
 
