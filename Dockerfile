@@ -1,9 +1,9 @@
 ARG DEBIAN_VERSION=bookworm
-ENV DEBIAN_VERSION=$DEBIAN_VERSION
 ARG RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
 ARG RUNITOR_ARCH=amd64
 
 FROM debian:$DEBIAN_VERSION-slim
+ENV DEBIAN_VERSION=$DEBIAN_VERSION
 LABEL authors="DJArbz"
 
 #==================================================
