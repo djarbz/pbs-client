@@ -15,6 +15,7 @@ The `PROXMOX_OUTPUT_FORMAT` is configured for `text` output by default.
 #### Image Variables
 | Variable | Description | Default |
 | --- | --- | --- |
+| PBC_DEBUG | Display all Env Vars that are written to the .env file. CAUTION: This will show secrets! |  |
 | PBC_BACKUP_ON_START | Set to any non-falsy value to run a backup on start. Skipped if a script parameter is passed or unset. |  |
 | PBC_CRON | Enable cron to backup on a schedule, must be set to a valid cron expression. |  |
 | PBC_HEALTHCHECKS_URL | URL to your custom Healthchecks instance. | `https://hc-ping.com` |
@@ -59,3 +60,36 @@ If you wish to enable encryption, you will need to interact with the client dire
 `docker run -it <image>:<tag> proxmox-backup-client key create encryption.key`
 You will be prompted for a password which for subsequent runs should be set via one of the `PBS_PASSWORD` environment variables. [reference](https://pbs.proxmox.com/docs/backup-client.html#encryption)  
 If you do not want to set a password on the encryption key, pass `--kdf none` to the above `docker run` command.
+
+### Docker Compose
+Here is an example compose definition
+```yaml
+services:
+  pbs-client:
+    image: ghcr.io/djarbz/pbs-client:latest
+    container_name: pbs-client
+    hostname: pbs-docker
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /run
+    volumes:
+      # - "/mnt/sd-apps/config/pbs:/root/.config/proxmox-backup/"
+      - "/host/dir/1/:/backup/dir1/"
+      - "/host/dir/2/:/backup/dir2/"
+      - "/host/dir/3/:/backup/dir3/"
+      - "/host/dir/4/:/backup/dir4/"
+    environment:
+      - TZ=America/Chicago
+      # <USER>@<DOMAIN>!<TOKEN>@<HOST>:<DATASTORE>
+      - PBS_REPOSITORY=<USER>@<DOMAIN>!<TOKEN>@<HOST>:<DATASTORE>
+      # User Password or Token Secret
+      - PBS_PASSWORD=<Token UUID>
+      - PBC_BACKUP_ON_START=true
+      # Every hour at the half hour
+      - PBC_CRON=30 * * * *
+      - PBC_HEALTHCHECKS_URL=https://healthchecks.domain.com/ping
+      - PBC_HEALTHCHECKS_UUID=<HC Check UUID>
+      - PBC_OPT_NAMESPACE=docker
+      - PBC_OPT_SKIP_LOST_AND_FOUND=true
+```

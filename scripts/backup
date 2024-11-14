@@ -36,23 +36,23 @@ for dir in "${BACKUP_DIRECTORIES[@]}"; do
 done
 
 # Print out the repository and backup command on first run only.
-if [ ! -e "${PBC_LAST_RUN_FILE}" ]; then
-  echo "## Detected backup directories:"
-  echo -e "#"
-  if [ ${#BACKUP_DIRECTORIES[@]} -eq 0 ]; then
-    echo "# Nothing to backup."
-  else
-    for path in "${BACKUP_DIRECTORIES[@]}"; do
-      echo -e "# $path"
-    done
-    echo -e "#\n"
-  fi
-  echo "## Backing up to repository: ${PBS_REPOSITORY}"
-  echo "## Executing backup command: ${BACKUP_CMD}"
+# if [ ! -e "${PBC_LAST_RUN_FILE}" ]; then
+echo "## Detected backup directories:"
+echo -e "#"
+if [ ${#BACKUP_DIRECTORIES[@]} -eq 0 ]; then
+  echo "# Nothing to backup."
+else
+  for path in "${BACKUP_DIRECTORIES[@]}"; do
+    echo -e "# $path"
+  done
+  echo -e "#\n"
 fi
+echo "## Backing up to repository: ${PBS_REPOSITORY}"
+echo "## Executing backup command: ${BACKUP_CMD}"
+# fi
 
 # Run the actual backup command.
-${BACKUP_CMD} #2>&1
+${BACKUP_CMD}
 
 # First run touches the file. Backups will set the date.
 date +"%Y-%m-%d %H:%M:%S" > "${PBC_LAST_RUN_FILE}"
