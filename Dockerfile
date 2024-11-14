@@ -57,10 +57,12 @@ RUN apt-get update -yqq && \
 #==================================================
 # Add Repository
 #==================================================
-RUN echo "Debian Version: ${DEBIAN_VERSION}"
-RUN curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
-    gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg"
-RUN echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main" | tee /etc/apt/sources.list.d/proxmox-backup-client.list
+RUN echo "Debian Version: ${DEBIAN_VERSION}" && \
+    curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
+    gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
+    echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] \
+    http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main" | \
+    tee /etc/apt/sources.list.d/proxmox-backup-client.list
 
 #==================================================
 # Install Proxmox Backup Client
