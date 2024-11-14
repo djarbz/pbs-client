@@ -62,8 +62,7 @@ RUN apt-get update -yqq && \
 #==================================================
 # Add Repository
 #==================================================
-RUN proxmox-release-${DEBIAN_VERSION}.gpg && \
-    curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
+RUN curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
     gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
     add-apt-repository "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main"
 
