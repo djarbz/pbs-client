@@ -54,6 +54,7 @@ export_env_vars() {
   # Provide feedback
   echo "Environment variables exported to: $output_file"
   echo "Total variables exported: $(grep -c '^export' "$output_file")"
+  [ -n "${PBC_DEBUG:-}" ] && cat "$output_file"
 }
 
 #==================================================
@@ -117,6 +118,7 @@ if [ -n "${PBC_HEALTHCHECKS_UUID:-}" ]; then
   fi
 
   hc_cmd+=" --"
+  echo "Enabling Healthchecks with command: $hc_cmd"
 fi
 
 #==================================================
