@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+source "/tmp/pbs-client.env"
+
+# Build the backup command we want to execute.
+BACKUP_CMD="proxmox-backup-client backup"
+
+if [ -n "${PBC_OPT_NAMESPACE}" ]; then
+  BACKUP_CMD+=" --ns ${PBC_OPT_NAMESPACE}"
+fi
+
+if [ -n "${PBC_OPT_SKIP_LOST_AND_FOUND}" ]; then
+  BACKUP_CMD+=" --skip-lost-and-found True"
+fi
+
+if [ -n "${PBC_OPT_ARGS}" ]; then
+  BACKUP_CMD+=" ${PBC_OPT_ARGS}"
+fi
+
+BACKUP_DIRECTORIES=()
+# Iterate over each subdirectory under /backup and add its full path to the array
+for dir in "${PBC_BACKUP_ROOT}"/*; do
+  [[ -d "$dir" ]] && BACKUP_DIRECTORIES+=("$dir/")
+done
+
+# Construct the directory target list with the proxmox-backup-client syntax.
+# This makes 1 .pxar file per path.
+for dir in "${BACKUP_DIRECTORIES[@]}"; do
+  PXAR_NAME="${dir#"$PBC_BACKUP_ROOT"}" # Remove the root dir prefix
+  PXAR_NAME="${PXAR_NAME%/}"  # Remove the trailing slash, if any
+  PXAR_NAME="${PXAR_NAME#\/}"  # Remove the first slash
+  PXAR_NAME="${PXAR_NAME//\//-}"  # Replace slashes with dashes
+
+  BACKUP_CMD+=" ${PXAR_NAME}.pxar:$dir"
+done
+
+# Print out the repository and backup command on first run only.
+# if [ ! -e "${PBC_LAST_RUN_FILE}" ]; then
+echo "## Detected backup directories:"
+echo -e "#"
+if [ ${#BACKUP_DIRECTORIES[@]} -eq 0 ]; then
+  echo "# Nothing to backup."
+else
+  for path in "${BACKUP_DIRECTORIES[@]}"; do
+    echo -e "# $path"
+  done
+  echo -e "#\n"
+fi
+echo "## Backing up to repository: ${PBS_REPOSITORY}"
+echo "## Executing backup command: ${BACKUP_CMD}"
+# fi
+
+# Run the actual backup command.
+${BACKUP_CMD}
+
+# First run touches the file. Backups will set the date.
+date +"%Y-%m-%d %H:%M:%S" > "${PBC_LAST_RUN_FILE}"

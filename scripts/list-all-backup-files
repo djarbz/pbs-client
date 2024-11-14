@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+source "/tmp/pbs-client.env"
+
+# We need to build this command in case namespaces are in use.
+LISTCMD="proxmox-backup-client snapshot list"
+if [ -n "$PBC_OPT_NAMESPACE" ]; then
+  LISTCMD+=" --ns ${PBC_OPT_NAMESPACE}"
+fi
+LISTCMD+=" --output-format json"
+
+data=$(${LISTCMD})
+host_name=$(hostname)
+
+echo "$data" | jq -r --arg host "$host_name" '
+    .[] |
+    select(.["backup-id"] == $host) |
+    "\(.["backup-type"])/\($host)/\(.["backup-time"] | tonumber | strftime("%Y-%m-%dT%H:%M:%SZ")): \(.files[].filename)"' |
+  awk -F ': ' '
+        {
+          if (timestamps[$1]) {
+            timestamps[$1] = timestamps[$1] "\n\t" $2
+          } else {
+            timestamps[$1] = "\t" $2
+          }
+        }
+        END {
+          for (ts in timestamps) {
+            print ts ":"
+            print timestamps[ts]
+          }
+        }'
