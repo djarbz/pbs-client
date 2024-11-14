@@ -51,7 +51,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
+            name=${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }},enable=${{ github.ref_type == 'tag' || github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch }}
             ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
