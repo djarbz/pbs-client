@@ -3,8 +3,8 @@
 
 # First run touches the file. Backups will set the date.
 #  -s checks if the file exists and is not empty.
-if [[ -s "${LAST_RUN_FILE}" ]]; then
-  cat "${LAST_RUN_FILE}"
+if [[ -s "${PBC_LAST_RUN_FILE}" ]]; then
+  cat "${PBC_LAST_RUN_FILE}"
 else
   echo "The first backup since container start has not happened yet."
 fi

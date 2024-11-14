@@ -36,7 +36,7 @@ for dir in "${BACKUP_DIRECTORIES[@]}"; do
 done
 
 # Print out the repository and backup command on first run only.
-if [ ! -e "${LAST_RUN_FILE}" ]; then
+if [ ! -e "${PBC_LAST_RUN_FILE}" ]; then
   echo "## Detected backup directories:"
   echo -e "#"
   if [ ${#BACKUP_DIRECTORIES[@]} -eq 0 ]; then
@@ -55,4 +55,4 @@ fi
 ${BACKUP_CMD} #2>&1
 
 # First run touches the file. Backups will set the date.
-date +"%Y-%m-%d %H:%M:%S" > "${LAST_RUN_FILE}"
+date +"%Y-%m-%d %H:%M:%S" > "${PBC_LAST_RUN_FILE}"
