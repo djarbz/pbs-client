@@ -47,23 +47,25 @@ ENV PROXMOX_OUTPUT_FORMAT=text
 # Install Dependancies
 #==================================================
 RUN apt-get update -yqq && \
-  DEBIAN_FRONTEND=noninteractive \
-    apt-get -yqq -o=Dpkg::Use-Pty=0 --no-install-recommends --no-install-suggests install \
-    apt-transport-https \
-    software-properties-common \
-    ca-certificates \
-    gpg \
-    gnupg2 \
-    curl \
-    wget \
-    jq && \
-  apt-get clean
+    DEBIAN_FRONTEND=noninteractive \
+      apt-get -yqq -o=Dpkg::Use-Pty=0 --no-install-recommends --no-install-suggests install \
+      apt-transport-https \
+      software-properties-common \
+      ca-certificates \
+      gpg \
+      gnupg2 \
+      curl \
+      wget \
+      jq && \
+    apt-get clean
 
 #==================================================
 # Add Repository
 #==================================================
-RUN add-apt-repository "deb http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main"
-RUN curl "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | apt-key add -
+RUN proxmox-release-${DEBIAN_VERSION}.gpg && \
+    curl -fsSL "https://enterprise.proxmox.com/debian/proxmox-release-${DEBIAN_VERSION}.gpg" | \
+    gpg --dearmor -o "/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg" && \
+    add-apt-repository "deb [signed-by=/etc/apt/keyrings/proxmox-release-${DEBIAN_VERSION}.gpg] http://download.proxmox.com/debian/pbs-client ${DEBIAN_VERSION} main"
 
 #==================================================
 # Install Proxmox Backup Client
