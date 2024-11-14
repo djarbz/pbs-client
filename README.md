@@ -17,7 +17,7 @@ The `PROXMOX_OUTPUT_FORMAT` is configured for `text` output by default.
 | --- | --- | --- |
 | PBC_BACKUP_ON_START | Set to any non-falsy value to run a backup on start. Skipped if a script parameter is passed or unset. |  |
 | PBC_CRON | Enable cron to backup on a schedule, must be set to a valid cron expression. |  |
-| PBC_HEALTHCHECKS_URL | URL to your custom Healthchecks instance. | `https://healthchecks.io` |
+| PBC_HEALTHCHECKS_URL | URL to your custom Healthchecks instance. | `https://hc-ping.com` |
 | PBC_HEALTHCHECKS_UUID | UUID for your healthcheck. |  |
 | PBC_HEALTHCHECKS_API_RETRIES | Number of times to retry the healthcheck API call | 5 |
 | PBC_HEALTHCHECKS_API_TIMEOUT | Timeout value to consider an API call failed | 10s |

@@ -84,7 +84,7 @@ if [ -n "$1" ]; then
     bash "$script_path" "${@:2}"
     exit $?
   fi
-  
+
   # If it's a binary, check if it's executable
   if [ -x "$script_path" ]; then
     # Run the binary
@@ -101,8 +101,12 @@ fi
 # Configure Healthchecks Reporting
 #==================================================
 hc_cmd=
-if [ -n "${PBC_HEALTHCHECKS_URL:-}" ] && [ -n "${PBC_HEALTHCHECKS_UUID:-}" ]; then
-  hc_cmd=/usr/local/bin/runitor
+if [ -n "${PBC_HEALTHCHECKS_UUID:-}" ]; then
+  hc_cmd="/usr/local/bin/runitor -uuid ${PBC_HEALTHCHECKS_UUID}"
+  
+  if [ -n "${PBC_HEALTHCHECKS_URL:-}" ]; then
+    hc_cmd+=" -api-url ${PBC_HEALTHCHECKS_URL}"
+  fi
   
   if [ -n "${PBC_HEALTHCHECKS_API_RETRIES:-}" ]; then
     hc_cmd+=" -api-retries ${PBC_HEALTHCHECKS_API_RETRIES}"
