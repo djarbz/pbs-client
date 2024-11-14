@@ -49,6 +49,7 @@ RUN apt-get update -yqq && \
       apt-transport-https \
       software-properties-common \
       ca-certificates \
+      cron \
       gpg \
       gnupg2 \
       curl \
