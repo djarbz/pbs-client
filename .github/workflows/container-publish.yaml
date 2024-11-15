@@ -10,60 +10,39 @@ on:
       - '.github/workflows/container-publish.yaml'
 
 jobs:
-
   push_to_registries:
     name: Push Docker image to multiple registries
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    if: |
+      github.ref_name == github.event.repository.default_branch || 
+      startsWith(github.ref_name, 'dev/') ||
+      startsWith(github.ref,'refs/tags/v')
 
     steps:
-
-      - name: Check if build is needed on branch or tag
-        id: check
-        run: |
-          # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-          if [[ "${{ github.ref_type }}" == "tag" && "${{ github.ref }}" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9][0-9]*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$ ]]; then
-            echo "needs_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          if [[ "${{ github.ref_name }}" == "${{ github.event.repository.default_branch }}" ]]; then
-            echo "needs_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          elif [[ "${{ github.ref_name }}" =~ ^dev/ ]]; then
-            echo "needs_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "needs_build=false" >> $GITHUB_OUTPUT
-
       - name: Check out the repo
-        if: steps.check.outputs.needs_build == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Get Runitor Latest Version
-        if: steps.check.outputs.needs_build == 'true'
         run: |
           RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
           curl -fsSL "https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-amd64" \
           -o runitor
 
       - name: Set up Docker Buildx
-        if: steps.check.outputs.needs_build == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        if: steps.check.outputs.needs_build == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Log in to the Container registry
-        if: steps.check.outputs.needs_build == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -71,7 +50,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
-        if: steps.check.outputs.needs_build == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -88,7 +66,6 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build and push Docker images
-        if: steps.check.outputs.needs_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
