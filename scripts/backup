@@ -43,6 +43,12 @@ mapfile -t BACKUP_DIRECTORIES < <(printf "%s\n" "${BACKUP_DIRECTORIES[@]}" | sor
 # Construct the directory target list with the proxmox-backup-client syntax.
 # This makes 1 .pxar file per path.
 for target in "${BACKUP_DIRECTORIES[@]}"; do
+  # Ensure that bind mounted files are note included.
+  if [[ ! -d "${target}" ]]; then
+    echo "WARNING: Target is NOT a directory, skipping [${target}]"
+    continue
+  fi
+
   # Start with a clean slate for PXAR_NAME
   PXAR_NAME=""
 
@@ -92,20 +98,7 @@ for target in "${BACKUP_DIRECTORIES[@]}"; do
     PXAR_NAME="root-backup"
   fi
 
-  # 8. Ensure directories have a trailing slash and files do not.
-  if [[ -d "${target}" ]]; then
-    # If it's a directory, ensure it has a trailing slash
-    echo "DEBUG: Target is a directory [${target}]"
-    if [[ "${target: -1}" != "/" ]]; then
-      target+="/"
-    fi
-  else
-    # If it's NOT a directory (e.g., a file or doesn't exist), remove any trailing slash
-    # This uses parameter expansion to remove the shortest matching '/' from the end.
-    echo "DEBUG: Target is NOT a directory [${target}]"
-    target="${target%/}"
-  fi
-  BACKUP_CMD+=" ${PXAR_NAME}.pxar:${target}"
+  BACKUP_CMD+=" ${PXAR_NAME}.pxar:${target}/"
 done
 
 # Print out the repository and backup command on first run only.
