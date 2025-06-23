@@ -14,10 +14,6 @@ if [ -n "${PBC_OPT_SKIP_LOST_AND_FOUND}" ]; then
   BACKUP_CMD+=" --skip-lost-and-found True"
 fi
 
-if [ -n "${PBC_OPT_SKIP_LOST_AND_FOUND}" ]; then
-  BACKUP_CMD+=" --skip-lost-and-found True"
-fi
-
 if [ -n "${PBC_OPT_ARGS}" ]; then
   BACKUP_CMD+=" ${PBC_OPT_ARGS}"
 fi
@@ -43,10 +39,54 @@ mapfile -t BACKUP_DIRECTORIES < <(printf "%s\n" "${BACKUP_DIRECTORIES[@]}" | sor
 # Construct the directory target list with the proxmox-backup-client syntax.
 # This makes 1 .pxar file per path.
 for dir in "${BACKUP_DIRECTORIES[@]}"; do
-  PXAR_NAME="${dir#"$PBC_BACKUP_ROOT"}" # Remove the root dir prefix
-  PXAR_NAME="${PXAR_NAME%/}"  # Remove the trailing slash, if any
-  PXAR_NAME="${PXAR_NAME#\/}"  # Remove the first slash
-  PXAR_NAME="${PXAR_NAME//\//-}"  # Replace slashes with dashes
+  # Start with a clean slate for PXAR_NAME
+  PXAR_NAME=""
+
+  # 1. Remove the PBC_BACKUP_ROOT prefix
+  # Use parameter expansion for prefix removal. Ensure it handles cases where
+  # PBC_BACKUP_ROOT might be just "/" or "///".
+  PXAR_NAME="${dir#"$PBC_BACKUP_ROOT"}"
+
+  # 2. Remove any leading slashes (e.g., if PXAR_NAME was just "/some/dir")
+  # This handles the case where PBC_BACKUP_ROOT is "/" and dir is "/backup/data/",
+  # resulting in "/backup/data/" initially for PXAR_NAME.
+  # It also handles if dir was the same as PBC_BACKUP_ROOT (e.g., /backup),
+  # resulting in an empty string or just "/" which we clean up.
+  PXAR_NAME="${PXAR_NAME#\/}"
+  PXAR_NAME="${PXAR_NAME#\/}" # Repeat for robustness against multiple leading slashes (e.g., //backup)
+
+  # 3. Remove any trailing slashes (e.g., "/path/to/dir/")
+  PXAR_NAME="${PXAR_NAME%/}"
+
+  # 4. Replace all slashes with double Underscores
+  PXAR_NAME="${PXAR_NAME//\//__}"
+
+  # 5. Replace any sequences of non-alphanumeric, non-hyphen, non-underscore
+  #    characters with a single hyphen. This is the most robust step.
+  #    Use POSIX character classes for portability and clarity.
+  #    First, convert valid special characters to a unique placeholder to protect them
+  #    during the main sanitization, then restore them.
+  #    This part can get tricky if you want to allow only hyphens and underscores,
+  #    and convert all *other* non-alphanumeric characters.
+
+  # Option A: Simple replacement of anything not allowed with a hyphen,
+  # then collapsing multiple hyphens.
+  # This is usually sufficient and simpler.
+  # Replace characters NOT [a-zA-Z0-9_-] with a hyphen
+  PXAR_NAME=$(echo "$PXAR_NAME" | sed -E 's/[^a-zA-Z0-9_-]+/-/g')
+
+  # 6. Remove leading/trailing hyphens that might have resulted from sanitization
+  PXAR_NAME="${PXAR_NAME#-}"
+  PXAR_NAME="${PXAR_NAME%-}"
+
+  # 7. Handle the edge case where PXAR_NAME becomes empty after sanitization
+  # (e.g., if PBC_BACKUP_ROOT was "/" and dir was also "/")
+  if [[ -z "$PXAR_NAME" ]]; then
+    # If the name is empty, it means the source path was effectively the root.
+    # You might want a default name, or handle this specifically.
+    # For now, let's use a generic name or "root-backup".
+    PXAR_NAME="root-backup"
+  fi
 
   BACKUP_CMD+=" ${PXAR_NAME}.pxar:$dir"
 done
