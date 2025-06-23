@@ -95,12 +95,14 @@ for target in "${BACKUP_DIRECTORIES[@]}"; do
   # 8. Ensure directories have a trailing slash and files do not.
   if [[ -d "${target}" ]]; then
     # If it's a directory, ensure it has a trailing slash
+    echo "DEBUG: Target is a directory [${target}]"
     if [[ "${target: -1}" != "/" ]]; then
       target+="/"
     fi
   else
     # If it's NOT a directory (e.g., a file or doesn't exist), remove any trailing slash
     # This uses parameter expansion to remove the shortest matching '/' from the end.
+    echo "DEBUG: Target is NOT a directory [${target}]"
     target="${target%/}"
   fi
   BACKUP_CMD+=" ${PXAR_NAME}.pxar:${target}"
