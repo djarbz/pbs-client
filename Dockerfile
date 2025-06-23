@@ -77,6 +77,7 @@ RUN apt-get update -yqq && \
 VOLUME /root/.config/proxmox-backup/
 ENV PBC_CONFIG_DIR=/root/.config/proxmox-backup/
 ENV PBC_BACKUP_ROOT=/backup
+ENV PBC_BACKUP_FINDMNT=true
 
 #==================================================
 # Install Runitor for Healthchecks.io

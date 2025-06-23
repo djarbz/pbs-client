@@ -25,6 +25,7 @@ The `PROXMOX_OUTPUT_FORMAT` is configured for `text` output by default.
 | PBC_OPT_NAMESPACE | Datastore Namespace for the backup |  |
 | PBC_OPT_SKIP_LOST_AND_FOUND |  Set to any non-falsy value to skip Lost+Found directories |  |
 | PBC_OPT_ARGS | Miscellaneous arguments to pass to the `proxmox-backup-client` command. |  |
+| PBC_BACKUP_FINDMNT | Enable search for all mount points under the backup directory and add to backup list. | true |
 
 [<HIDDEN> | PBC_OPT_BACKUP_ID | ID for the backup, recommended to use the FQDN of the host. |  |]: #
 
