@@ -25,7 +25,7 @@ fi
 BACKUP_DIRECTORIES=()
 # Iterate over each subdirectory under /backup and add its full path to the array
 for dir in "${PBC_BACKUP_ROOT}"/*; do
-  [[ -d "$dir" ]] && BACKUP_DIRECTORIES+=("$dir/")
+  [[ -d "$dir" ]] && BACKUP_DIRECTORIES+=("$dir")
 done
 
 # Feature flag to find mount points
@@ -33,7 +33,7 @@ if [[ "${PBC_BACKUP_FINDMNT}" == "true" ]]; then
   # Find all mount points under PBC_BACKUP_ROOT
   # Using mapfile -t to safely read multi-line output into an array
   # Using process substitution to avoid subshell issues
-  mapfile -t -O "${#BACKUP_DIRECTORIES[@]}" BACKUP_DIRECTORIES < <(findmnt -n -o TARGET -l | grep -e "^${PBC_BACKUP_ROOT}/" | sed 's#$#/#')
+  mapfile -t -O "${#BACKUP_DIRECTORIES[@]}" BACKUP_DIRECTORIES < <(findmnt -n -o TARGET -l | grep -e "^${PBC_BACKUP_ROOT}/")
 fi
 
 # Sort and de-duplicate the list of BACKUP_DIRECTORIES
@@ -42,14 +42,14 @@ mapfile -t BACKUP_DIRECTORIES < <(printf "%s\n" "${BACKUP_DIRECTORIES[@]}" | sor
 
 # Construct the directory target list with the proxmox-backup-client syntax.
 # This makes 1 .pxar file per path.
-for dir in "${BACKUP_DIRECTORIES[@]}"; do
+for target in "${BACKUP_DIRECTORIES[@]}"; do
   # Start with a clean slate for PXAR_NAME
   PXAR_NAME=""
 
   # 1. Remove the PBC_BACKUP_ROOT prefix
   # Use parameter expansion for prefix removal. Ensure it handles cases where
   # PBC_BACKUP_ROOT might be just "/" or "///".
-  PXAR_NAME="${dir#"$PBC_BACKUP_ROOT"}"
+  PXAR_NAME="${target#"$PBC_BACKUP_ROOT"}"
 
   # 2. Remove any leading slashes (e.g., if PXAR_NAME was just "/some/dir")
   # This handles the case where PBC_BACKUP_ROOT is "/" and dir is "/backup/data/",
@@ -92,7 +92,18 @@ for dir in "${BACKUP_DIRECTORIES[@]}"; do
     PXAR_NAME="root-backup"
   fi
 
-  BACKUP_CMD+=" ${PXAR_NAME}.pxar:$dir"
+  # 8. Ensure directories have a trailing slash and files do not.
+  if [[ -d "${target}" ]]; then
+    # If it's a directory, ensure it has a trailing slash
+    if [[ "${target: -1}" != "/" ]]; then
+      target+="/"
+    fi
+  else
+    # If it's NOT a directory (e.g., a file or doesn't exist), remove any trailing slash
+    # This uses parameter expansion to remove the shortest matching '/' from the end.
+    target="${target%/}"
+  fi
+  BACKUP_CMD+=" ${PXAR_NAME}.pxar:${target}"
 done
 
 # Print out the repository and backup command on first run only.
@@ -101,6 +112,7 @@ echo "## Detected backup directories:"
 echo -e "#"
 if [ ${#BACKUP_DIRECTORIES[@]} -eq 0 ]; then
   echo "# Nothing to backup."
+  exit 1
 else
   for path in "${BACKUP_DIRECTORIES[@]}"; do
     echo -e "# $path"
