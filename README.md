@@ -26,6 +26,7 @@ The `PROXMOX_OUTPUT_FORMAT` is configured for `text` output by default.
 | PBC_OPT_SKIP_LOST_AND_FOUND |  Set to any non-falsy value to skip Lost+Found directories |  |
 | PBC_OPT_ARGS | Miscellaneous arguments to pass to the `proxmox-backup-client` command. |  |
 | PBC_BACKUP_FINDMNT | Enable search for all mount points under the backup directory and add to backup list. | true |
+| PBC_OPT_CHANGE_DETECTION_MODE | [See docs](https://pbs.proxmox.com/docs/backup-client.html#change-detection-mode) | metadata |
 
 [<HIDDEN> | PBC_OPT_BACKUP_ID | ID for the backup, recommended to use the FQDN of the host. |  |]: #
 
