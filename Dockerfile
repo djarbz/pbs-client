@@ -41,7 +41,7 @@ ENV PROXMOX_OUTPUT_FORMAT=text
 # ENV PROXMOX_OUTPUT_NO_HEADER=
 
 #==================================================
-# Install Dependancies
+# Install Dependencies
 #==================================================
 RUN apt-get update -yqq && \
     DEBIAN_FRONTEND=noninteractive \
