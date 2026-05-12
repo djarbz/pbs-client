@@ -1,6 +1,9 @@
 name: Publish Docker Image
 
 on:
+  schedule:
+    # Runs at 00:00 UTC every Monday
+    - cron: '0 0 * * 1'
   workflow_dispatch:
   push:
     paths:
