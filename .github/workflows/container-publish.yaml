@@ -68,8 +68,8 @@ jobs:
       - name: Get Latest ARM64 PBS Client URL
         id: pbs-arm64
         run: |
-          # Fetch the latest release JSON, find the asset ending in .deb, and extract its download URL
-          URL=$(curl -s https://api.github.com/repos/wofferl/proxmox-backup-arm64/releases/latest | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url')
+          # Fetch the latest release JSON, find the asset starting with "proxmox-backup-client" and ending in ".deb", and extract its download URL
+          URL=$(curl -s https://api.github.com/repos/wofferl/proxmox-backup-arm64/releases/latest | jq -r '.assets[] | select(.name | startswith("proxmox-backup-client") and endswith(".deb")) | .browser_download_url' | head -n 1)
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker images

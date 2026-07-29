@@ -15,6 +15,7 @@
     "PXAR",
     "pxarexclude",
     "runitor",
+    "startswith",
     "subshell",
     "tmpfs",
     "tonumber",
