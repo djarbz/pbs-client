@@ -30,11 +30,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Runitor Latest Version
-        run: |
-          RUNITOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/bdd/runitor/releases/latest" | cut -d '/' -f8)
-          curl -fsSL "https://github.com/bdd/runitor/releases/download/${RUNITOR_VERSION}/runitor-${RUNITOR_VERSION}-linux-amd64" \
-          -o runitor
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -68,12 +65,22 @@ jobs:
             type=ref,event=branch,enable=${{ github.ref_type == 'branch' && startsWith(github.ref_name, 'dev') }}
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v') }}
 
+      - name: Get Latest ARM64 PBS Client URL
+        id: pbs-arm64
+        run: |
+          # Fetch the latest release JSON, find the asset ending in .deb, and extract its download URL
+          URL=$(curl -s https://api.github.com/repos/wofferl/proxmox-backup-arm64/releases/latest | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker images
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ARM64_URL=${{ steps.pbs-arm64.outputs.url }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

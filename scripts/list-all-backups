@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
+# Shellcheck(SC1091): Not following: /tmp/pbs-client.env was not specified as input (see shellcheck -x).
+# shellcheck disable=SC1091
 source "/tmp/pbs-client.env"
 
 # We need to build this command in case namespaces are in use.
 LISTCMD="proxmox-backup-client snapshot list"
-if [ -n "$PBS_DATASTORE_NS" ]; then
-  LISTCMD+=" --ns ${PBS_DATASTORE_NS}"
-fi
 LISTCMD+=" --output-format json"
 
 data=$(${LISTCMD})
 host_name=$(hostname)
+
+# JQ Explanation:
+# 1. map(select(.["backup-id"] == $host)): Filters the initial JSON array to only keep backups that match the current machine's hostname.
+# 2. map("..."): Transforms the matching JSON objects into strings.
+#    - \(.["backup-type"])/\($host)/\(...): Formats the standard Proxmox path (e.g., host/myhostname/2023-10-25T15:30:00Z) by converting the Unix timestamp to an ISO 8601 UTC date.
+#    - \(.size / (1024 * 1024)...): Calculates the backup size from bytes to Megabytes, converts to a string, and truncates to exactly two decimal places.
+# 3. join("\n"): Combines the array of strings into a single, newline-separated text block.
 echo "${data}" | jq -r --arg host "${host_name}" '
-  map(select(.["backup-id"] == $host)) | 
-  map("\(.["backup-type"])/\($host)/\(.["backup-time"] | tonumber | strftime("%Y-%m-%dT%H:%M:%SZ")) \(.size / (1024 * 1024) | tostring + " MB" | split(".") | .[0] + "." + .[1][:2] + " MB")") | 
+  map(select(.["backup-id"] == $host)) |
+  map("\(.["backup-type"])/\($host)/\(.["backup-time"] | tonumber | strftime("%Y-%m-%dT%H:%M:%SZ")) \(.size / (1024 * 1024) | tostring + " MB" | split(".") | .[0] + "." + .[1][:2] + " MB")") |
   join("\n")'

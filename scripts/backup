@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
+# Shellcheck(SC1091): Not following: /tmp/pbs-client.env was not specified as input (see shellcheck -x).
+# shellcheck disable=SC1091
 source "/tmp/pbs-client.env"
 
 # Build the backup command we want to execute.
 BACKUP_CMD="proxmox-backup-client backup"
-
-if [ -n "${PBC_OPT_NAMESPACE}" ]; then
-  BACKUP_CMD+=" --ns ${PBC_OPT_NAMESPACE}"
-fi
 
 if [ -n "${PBC_OPT_SKIP_LOST_AND_FOUND}" ]; then
   BACKUP_CMD+=" --skip-lost-and-found True"
@@ -25,11 +23,11 @@ fi
 BACKUP_DIRECTORIES=()
 # Iterate over each subdirectory under /backup and add its full path to the array
 for dir in "${PBC_BACKUP_ROOT}"/*; do
-  [[ -d "$dir" ]] && BACKUP_DIRECTORIES+=("$dir")
+  [[ -d $dir ]] && BACKUP_DIRECTORIES+=("$dir")
 done
 
 # Feature flag to find mount points
-if [[ "${PBC_BACKUP_FINDMNT}" == "true" ]]; then
+if [[ ${PBC_BACKUP_FINDMNT} == "true" ]]; then
   # Find all mount points under PBC_BACKUP_ROOT
   # Using mapfile -t to safely read multi-line output into an array
   # Using process substitution to avoid subshell issues
@@ -44,7 +42,7 @@ mapfile -t BACKUP_DIRECTORIES < <(printf "%s\n" "${BACKUP_DIRECTORIES[@]}" | sor
 # This makes 1 .pxar file per path.
 for target in "${BACKUP_DIRECTORIES[@]}"; do
   # Ensure that bind mounted files are note included.
-  if [[ ! -d "${target}" ]]; then
+  if [[ ! -d ${target} ]]; then
     echo "WARNING: Target is NOT a directory, skipping [${target}]"
     continue
   fi
@@ -91,7 +89,7 @@ for target in "${BACKUP_DIRECTORIES[@]}"; do
 
   # 7. Handle the edge case where PXAR_NAME becomes empty after sanitization
   # (e.g., if PBC_BACKUP_ROOT was "/" and dir was also "/")
-  if [[ -z "$PXAR_NAME" ]]; then
+  if [[ -z $PXAR_NAME ]]; then
     # If the name is empty, it means the source path was effectively the root.
     # You might want a default name, or handle this specifically.
     # For now, let's use a generic name or "root-backup".
@@ -122,4 +120,4 @@ echo "## Executing backup command: ${BACKUP_CMD}"
 ${BACKUP_CMD}
 
 # First run touches the file. Backups will set the date.
-date +"%Y-%m-%d %H:%M:%S" > "${PBC_LAST_RUN_FILE}"
+date +"%Y-%m-%d %H:%M:%S" >"${PBC_LAST_RUN_FILE}"

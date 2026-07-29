@@ -27,7 +27,7 @@ export_env_vars() {
   timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
   # Create or truncate the file with a header
-  cat > "$output_file" <<- EOF
+  cat >"$output_file" <<-EOF
 		# Environment variables with PBS_, PBC_, or PROXMOX_ prefix, and ALL_PROXY
 		# Generated on: $timestamp
 		# ------------------------------------------
@@ -104,15 +104,15 @@ fi
 hc_cmd=
 if [ -n "${PBC_HEALTHCHECKS_UUID:-}" ]; then
   hc_cmd="/usr/local/bin/runitor -uuid ${PBC_HEALTHCHECKS_UUID}"
-  
+
   if [ -n "${PBC_HEALTHCHECKS_URL:-}" ]; then
     hc_cmd+=" -api-url ${PBC_HEALTHCHECKS_URL}"
   fi
-  
+
   if [ -n "${PBC_HEALTHCHECKS_API_RETRIES:-}" ]; then
     hc_cmd+=" -api-retries ${PBC_HEALTHCHECKS_API_RETRIES}"
   fi
-  
+
   if [ -n "${PBC_HEALTHCHECKS_API_TIMEOUT:-}" ]; then
     hc_cmd+=" -api-timeout ${PBC_HEALTHCHECKS_API_TIMEOUT}"
   fi
@@ -157,7 +157,7 @@ fi
 echo "Configuring cron with expression: $PBC_CRON"
 cron_file="/etc/cron.d/pbc-backup"
 echo "Writing cron entry to $cron_file"
-echo "$PBC_CRON root ${hc_cmd} /scripts/backup > /proc/1/fd/1 2>/proc/1/fd/2" > "$cron_file"
+echo "$PBC_CRON root ${hc_cmd} /scripts/backup > /proc/1/fd/1 2>/proc/1/fd/2" >"$cron_file"
 chmod 600 "$cron_file"
 
 #==================================================
@@ -172,4 +172,4 @@ echo "Starting cron..."
 #   8 - will log the process number of all cron jobs
 #  -l Enable LSB compliant names for /etc/cron.d files.
 #     This setting, however, does not affect the parsing of files under /etc/cron.hourly, /etc/cron.daily, /etc/cron.weekly or /etc/cron.monthly.
-cron -f -L 15 -l
+exec cron -f -L 15 -l

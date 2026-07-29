@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
+# Shellcheck(SC1091): Not following: /tmp/pbs-client.env was not specified as input (see shellcheck -x).
+# shellcheck disable=SC1091
 source "/tmp/pbs-client.env"
 
 # We need to build this command in case namespaces are in use.
 LISTCMD="proxmox-backup-client snapshot list"
-if [ -n "$PBS_DATASTORE_NS" ]; then
-  LISTCMD+=" --ns ${PBS_DATASTORE_NS}"
-fi
 LISTCMD+=" --output-format json"
 
 data=$(${LISTCMD})
 host_name=$(hostname)
 
+# JQ Explanation:
+# 1. .[] | select(.["backup-id"] == $host): Iterates through the array and filters for backups matching the current hostname.
+# 2. .["backup-time"] | tonumber | strftime(...): Extracts the Unix timestamp, converts it to a number, and formats it as an ISO 8601 UTC date string.
 mapfile -t backup_times < <(echo "$data" | jq -r --arg host "$host_name" '
     .[] |
     select(.["backup-id"] == $host) |
@@ -37,6 +39,9 @@ else
   exit 1
 fi
 
+# JQ Explanation:
+# 1. Filters the array for items matching both the hostname AND the specifically selected human-readable timestamp.
+# 2. "type/host/timestamp: filename": Outputs a formatted string for every file found inside the matching backup's `files` array.
 echo "$data" | jq -r --arg host "$host_name" --arg timestamp "$selected_backup_time" '
     .[] |
     select(.["backup-id"] == $host and (.["backup-time"] | tonumber | strftime("%Y-%m-%dT%H:%M:%SZ")) == $timestamp) |

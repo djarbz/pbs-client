@@ -1,10 +1,24 @@
 {
-    "cSpell.words": [
-        "Aterfax's",
-        "healthcheck",
-        "HEALTHCHECKS",
-        "PXAR",
-        "pxarexclude",
-        "tmpfs"
-    ]
+  "cSpell.words": [
+    "Arbz",
+    "Aterfax's",
+    "Buildx",
+    "dearmor",
+    "elif",
+    "endswith",
+    "EORUN",
+    "healthcheck",
+    "HEALTHCHECKS",
+    "keyrings",
+    "LISTCMD",
+    "pipefail",
+    "PXAR",
+    "pxarexclude",
+    "runitor",
+    "subshell",
+    "tmpfs",
+    "tonumber",
+    "tostring",
+    "trixie"
+  ]
 }

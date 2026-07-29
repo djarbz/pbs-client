@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
+# Shellcheck(SC1091): Not following: /tmp/pbs-client.env was not specified as input (see shellcheck -x).
+# shellcheck disable=SC1091
 source "/tmp/pbs-client.env"
 
 # We need to build this command in case namespaces are in use.
 LISTCMD="proxmox-backup-client snapshot list"
-if [ -n "$PBC_OPT_NAMESPACE" ]; then
-  LISTCMD+=" --ns ${PBC_OPT_NAMESPACE}"
-fi
 LISTCMD+=" --output-format json"
 
 data=$(${LISTCMD})
 host_name=$(hostname)
 
+# JQ Explanation:
+# 1. .[] | select(.["backup-id"] == $host): Steps through the array and removes any backups that do not belong to the current hostname.
+# 2. "\(.["backup-type"])....": Constructs a string formatted as "type/host/timestamp: filename". The timestamp is converted from the Unix epoch to a readable UTC date format, and a line is yielded for every file in the backup's `files` array.
 echo "$data" | jq -r --arg host "$host_name" '
     .[] |
     select(.["backup-id"] == $host) |
