@@ -172,4 +172,4 @@ echo "Starting cron..."
 #   8 - will log the process number of all cron jobs
 #  -l Enable LSB compliant names for /etc/cron.d files.
 #     This setting, however, does not affect the parsing of files under /etc/cron.hourly, /etc/cron.daily, /etc/cron.weekly or /etc/cron.monthly.
-exec cron -f -L 15 -l
+exec /usr/sbin/cron -f -L 15 -l
