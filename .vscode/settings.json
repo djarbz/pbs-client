@@ -11,6 +11,7 @@
     "HEALTHCHECKS",
     "keyrings",
     "LISTCMD",
+    "mmin",
     "pipefail",
     "PXAR",
     "pxarexclude",

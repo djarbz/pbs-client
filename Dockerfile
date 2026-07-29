@@ -121,5 +121,12 @@ COPY --chmod=755 scripts /scripts
 # Start!
 #==================================================
 ENV PBC_LAST_RUN_FILE=/run/pbs-client.run
+
+# Add the Docker Healthcheck
+# Start-period allows the container time to boot and run its first backup
+# before docker starts reporting it as unhealthy.
+HEALTHCHECK --interval=5m --timeout=10s --start-period=60s --retries=3 \
+  CMD bash /scripts/healthcheck || exit 1
+
 STOPSIGNAL SIGINT
 ENTRYPOINT ["/entrypoint.sh"]
