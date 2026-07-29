@@ -14,7 +14,7 @@ ARG DEBIAN_VERSION=trixie
 ENV DEBIAN_VERSION=$DEBIAN_VERSION
 
 # Set shell to bash with pipefail to catch errors in piped commands
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
 
 #==================================================
 # PROXMOX Environment Variables
@@ -57,7 +57,6 @@ RUN <<EORUN
 apt-get update
 apt-get install -y --no-install-recommends \
   apt-transport-https \
-  software-properties-common \
   ca-certificates \
   cron \
   gpg \
